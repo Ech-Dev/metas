@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Pastel Sales Planner ✨ Mobile First</title>
+  
+  <!-- Tipografía Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Librerías ligeras via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-canvas: #fff5f8;
+      --bg-gradient: linear-gradient(180deg, #fff2f6 0%, #f6effd 60%, #eefbf7 100%);
+      --surface-card: #ffffff;
+      --border-soft: #ffccd7;
+      --text-title: #4f2d4d;
+      --text-body: #614460;
+      --text-muted: #957f97;
+      --brand-pink: #ff6584;
+      --brand-pink-hover: #fa4f72;
+      --brand-lilac: #c3a6ff;
+      --brand-mint: #9ae5cc;
+      --shadow-sheet: 0 -10px 30px rgba(79, 45, 77, 0.15);
+      --shadow-card: 0 4px 16px rgba(255, 140, 169, 0.12);
+      --shadow-button: 0 6px 18px rgba(255, 101, 132, 0.35);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* RESET & ERGONOMÍA TÁCTIL */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Quicksand', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation; /* Elimina retraso de 300ms en tap */
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-body);
+      min-height: 100dvh; /* Altura dinámica real en móvil */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 14px calc(80px + var(--safe-bottom)) 14px; /* Espacio para barra flotante */
+      overflow-x: hidden;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 480px; /* Ancho ergonómico óptimo de lectura */
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 2px;
+    }
+
+    .header-info h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-title);
+      line-height: 1.15;
+    }
+
+    .header-info span {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .btn-icon {
+      min-width: 44px;
+      min-height: 44px;
+      background: white;
+      border: 1.5px solid var(--border-soft);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      cursor: pointer;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.1s ease;
+    }
+
+    .btn-icon:active {
+      transform: scale(0.92);
+    }
+
+    /* ALERTA RECORDATORIA DISCRETA */
+    .alert-pill {
+      background: #ffffff;
+      border: 1.5px dashed #ff99b6;
+      border-radius: 16px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #723b63;
+      box-shadow: var(--shadow-card);
+    }
+
+    /* HERO CARD: VENTA DIARIA NECESARIA (Punto focal) */
+    .hero-card {
+      background: linear-gradient(135deg, #fff0f5 0%, #ffe3ea 100%);
+      border: 2px solid #ffccd7;
+      border-radius: 24px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+    }
+
+    .hero-card .label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #a45372;
+    }
+
+    .hero-card .main-val {
+      font-size: 2.3rem;
+      font-weight: 700;
+      color: #542240;
+      margin: 4px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .badge-chip {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 101, 132, 0.25);
+      border-radius: 30px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--brand-pink);
+    }
+
+    /* MINI METRICS ROW */
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mini-card {
+      background: var(--surface-card);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 18px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .mini-card .label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .mini-card .val {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-title);
+      margin: 3px 0;
+    }
+
+    .mini-card .sub {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: #795d7b;
+    }
+
+    /* BARRA DE PROGRESO */
+    .progress-bar-wrap {
+      width: 100%;
+      height: 7px;
+      background: #fae4ed;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff7597, #c3a6ff);
+      border-radius: 10px;
+      transition: width 0.4s ease;
+    }
+
+    /* SEGMENTED CONTROL (TABS) */
+    .segmented-control {
+      background: #f4e3eb;
+      padding: 3px;
+      border-radius: 14px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .seg-btn {
+      flex: 1;
+      min-height: 42px; /* Ergonomía táctil */
+      border: none;
+      background: transparent;
+      border-radius: 11px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #846881;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .seg-btn.active {
+      background: #ffffff;
+      color: var(--brand-pink);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    /* CONTENEDOR DE PESTAÑAS */
+    .tab-surface {
+      background: var(--surface-card);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 210px;
+      width: 100%;
+    }
+
+    /* HISTORIAL COMPACTO */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .history-row {
+      background: #fffbfe;
+      border: 1px solid #ffe3ec;
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .history-meta .note {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-title);
+    }
+
+    .history-meta .date {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .history-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-amount {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #2b9348;
+    }
+
+    .btn-del-touch {
+      min-width: 44px;
+      min-height: 44px;
+      background: transparent;
+      border: none;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #ff99b6;
+    }
+
+    .btn-del-touch:active {
+      transform: scale(0.85);
+    }
+
+    /* STICKY BOTTOM ACTION BAR (ZONA DEL PULGAR) */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1.5px solid var(--border-soft);
+      padding: 10px 16px calc(10px + var(--safe-bottom)) 16px;
+      display: flex;
+      justify-content: center;
+      z-index: 99;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+    }
+
+    .btn-fab {
+      width: 100%;
+      max-width: 480px;
+      min-height: 52px; /* Super táctil */
+      background: linear-gradient(135deg, #ff7597 0%, #ff5277 100%);
+      color: white;
+      border: none;
+      border-radius: 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: var(--shadow-button);
+      transition: transform 0.1s ease;
+    }
+
+    .btn-fab:active {
+      transform: scale(0.96);
+    }
+
+    /* BOTTOM SHEETS (HOJAS MODALES DESLIZANTES) */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(43, 24, 42, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .sheet-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .bottom-sheet {
+      background: #ffffff;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 28px 28px 0 0;
+      padding: 12px 20px calc(24px + var(--safe-bottom)) 20px;
+      box-shadow: var(--shadow-sheet);
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sheet-backdrop.active .bottom-sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 5px;
+      background: #edd3dd;
+      border-radius: 10px;
+      margin: 0 auto 16px;
+    }
+
+    .sheet-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-title);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* FORMULARIOS SIN ZOOM EN MÓVIL */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    input {
+      width: 100%;
+      min-height: 48px;
+      font-size: 16px; /* REGLA CRÍTICA: Previene zoom intrusivo en iOS */
+      padding: 0 14px;
+      border: 1.5px solid var(--border-soft);
+      border-radius: 14px;
+      background: #fdfafc;
+      color: var(--text-title);
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--brand-pink);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(255, 101, 132, 0.2);
+    }
+
+    .input-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-sheet-submit {
+      min-height: 50px;
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ff7597 0%, #ff5277 100%);
+      color: white;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow-button);
+      margin-top: 4px;
+    }
+
+    .btn-sheet-submit:active {
+      transform: scale(0.97);
+    }
+
+    /* TOAST NOTIFICATION PASTEL */
+    .toast {
+      position: fixed;
+      top: 20px;
+      background: #ffffff;
+      color: #633256;
+      border: 1.5px solid #ffccd7;
+      padding: 10px 18px;
+      border-radius: 50px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(79, 45, 77, 0.12);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateY(-80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* AJUSTE RESPONSIVO SUAVE PARA TABLETS/DESKTOP */
+    @media (min-width: 600px) {
+      body {
+        padding-top: 24px;
+      }
+      .bottom-sheet {
+        border-radius: 28px;
+        margin-bottom: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="toast">
+    <span id="toastIcon">🌸</span>
+    <span id="toastMsg">Mensaje</span>
+  </div>
+
+  <main class="app-shell">
+
+    <!-- HEADER SUPERIOR -->
+    <header>
+      <div class="header-info">
+        <h1>Diario Dulce ✨</h1>
+        <span id="headerDate">Cargando...</span>
+      </div>
+      <!-- Botón de configuración accesible pero no invasivo -->
+      <button class="btn-icon" aria-label="Configurar meta" onclick="openSheet('goalSheet')">
+        ⚙️
+      </button>
+    </header>
+
+    <!-- ALERTA RECORDATORIA -->
+    <div class="alert-pill">
+      <span>⏰</span>
+      <span id="reminderMessage">¿Terminaste tu turno? Anota tu venta de hoy.</span>
+    </div>
+
+    <!-- HERO CARD: VENTA DIARIA REQUERIDA (PUNTO FOCAL) -->
+    <section class="hero-card">
+      <div class="label">🎯 Venta Diaria Requerida</div>
+      <div class="main-val" id="dailyRequiredAmount">$ 0</div>
+      <div class="badge-chip" id="dailyRequiredPercent">0% de tu objetivo al día</div>
+    </section>
+
+    <!-- MINI GRILLA: SALDO Y TOTAL -->
+    <div class="mini-grid">
+      <!-- Saldo Pendiente -->
+      <div class="mini-card">
+        <div class="label">Saldo Restante</div>
+        <div class="val" id="pendingAmount">$ 0</div>
+        <div class="sub" id="daysRemaining">0 días rest.</div>
+      </div>
+
+      <!-- Recaudado -->
+      <div class="mini-card">
+        <div class="label">Total Recaudado</div>
+        <div class="val" id="totalSoldAmount">$ 0</div>
+        <div class="sub" id="progressPercent">0% logrado</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑAS (SEGMENTED CONTROL) -->
+    <div class="segmented-control">
+      <button class="seg-btn active" id="tabBtnProg" onclick="switchView('prog')">🍰 Progreso</button>
+      <button class="seg-btn" id="tabBtnRitmo" onclick="switchView('ritmo')">📈 Ritmo</button>
+      <button class="seg-btn" id="tabBtnHist" onclick="switchView('hist')">🎀 Historial</button>
+    </div>
+
+    <!-- SUPERFICIE DE CONTENIDO DE PESTAÑAS -->
+    <div class="tab-surface">
+      <!-- 1. Gráfico Dona -->
+      <div id="viewProg" class="chart-container">
+        <canvas id="progressChart"></canvas>
+      </div>
+
+      <!-- 2. Gráfico Barras -->
+      <div id="viewRitmo" class="chart-container" style="display: none;">
+        <canvas id="ritmoChart"></canvas>
+      </div>
+
+      <!-- 3. Historial de Entradas -->
+      <div id="viewHist" style="display: none;">
+        <div class="history-list" id="salesHistoryList">
+          <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 20px;">
+            Aún no hay ventas registradas. 💌
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- STICKY BOTTOM BAR (ZONA CÓMODA DEL PULGAR) -->
+  <div class="bottom-bar">
+    <button class="btn-fab" onclick="openSheet('saleSheet')">
+      <span>+ Anotar Venta de Hoy</span> 💸
+    </button>
+  </div>
+
+  <!-- BOTTOM SHEET: REGISTRAR VENTA -->
+  <div class="sheet-backdrop" id="saleSheet" onclick="closeSheetOnBackdrop(event, 'saleSheet')">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">
+        <span>💸</span>
+        <span>Anotar Venta del Turno</span>
+      </div>
+      <div class="form-group">
+        <label for="saleAmount">Monto Vendido ($)</label>
+        <!-- inputmode="numeric" para teclado grande en iPhone y Android -->
+        <input type="number" inputmode="numeric" id="saleAmount" placeholder="Ej: 45000" autofocus />
+      </div>
+      <div class="input-split">
+        <div class="form-group">
+          <label for="saleDate">Fecha</label>
+          <input type="date" id="saleDate" />
+        </div>
+        <div class="form-group">
+          <label for="saleNote">Detalle / Turno</label>
+          <input type="text" id="saleNote" placeholder="Ej: Tienda" />
+        </div>
+      </div>
+      <button class="btn-sheet-submit" onclick="saveSale()">
+        Descontar de la Meta ✨
+      </button>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET: CONFIGURAR META -->
+  <div class="sheet-backdrop" id="goalSheet" onclick="closeSheetOnBackdrop(event, 'goalSheet')">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">
+        <span>🎯</span>
+        <span>Definir Gran Meta</span>
+      </div>
+      <div class="form-group">
+        <label for="targetAmount">Meta Total en Pesos ($)</label>
+        <input type="number" inputmode="numeric" id="targetAmount" placeholder="Ej: 1500000" />
+      </div>
+      <div class="form-group">
+        <label for="targetDate">Fecha Límite</label>
+        <input type="date" id="targetDate" />
+      </div>
+      <button class="btn-sheet-submit" style="background: linear-gradient(135deg, #c3a6ff, #a682fa);" onclick="saveGoal()">
+        Guardar Mi Objetivo 💖
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // --- ESTADO Y PERSISTENCIA ---
+    const STORAGE_KEY = 'pastel_sales_mobile_pro_v3';
+
+    let appData = {
+      targetAmount: 0,
+      targetDate: '',
+      sales: []
+    };
+
+    let progressChartInstance = null;
+    let ritmoChartInstance = null;
+    let currentTab = 'prog';
+
+    // Formateador de moneda en Pesos
+    const formatMoney = (val) => new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      maximumFractionDigits: 0
+    }).format(val || 0);
+
+    // --- INICIALIZACIÓN ---
+    window.addEventListener('DOMContentLoaded', () => {
+      // Fecha en Header
+      const options = { weekday: 'short', day: 'numeric', month: 'short' };
+      document.getElementById('headerDate').innerText = new Date().toLocaleDateString('es-CL', options);
+
+      // Fecha default hoy para input
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('saleDate').value = today;
+
+      loadData();
+      updateDashboard();
+
+      // Si no hay meta, desplegar el Bottom Sheet para que la configure al entrar
+      if (!appData.targetAmount || !appData.targetDate) {
+        setTimeout(() => openSheet('goalSheet'), 400);
+      }
+    });
+
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          appData = JSON.parse(saved);
+          if (appData.targetAmount) document.getElementById('targetAmount').value = appData.targetAmount;
+          if (appData.targetDate) document.getElementById('targetDate').value = appData.targetDate;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    }
+
+    // --- MANEJO DE BOTTOM SHEETS ---
+    function openSheet(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function closeSheet(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function closeSheetOnBackdrop(e, id) {
+      if (e.target.id === id) closeSheet(id);
+    }
+
+    // --- FEEDBACK TOAST ---
+    function showToast(msg, icon = '🌸') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      document.getElementById('toastIcon').innerText = icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    // --- ACCIONES PRINCIPALES ---
+    function saveGoal() {
+      const amount = parseFloat(document.getElementById('targetAmount').value);
+      const date = document.getElementById('targetDate').value;
+
+      if (!amount || amount <= 0) {
+        showToast("Ingresa un monto meta válido", "⚠️");
+        return;
+      }
+      if (!date) {
+        showToast("Selecciona tu fecha límite", "📅");
+        return;
+      }
+
+      appData.targetAmount = amount;
+      appData.targetDate = date;
+      saveData();
+      closeSheet('goalSheet');
+      updateDashboard();
+
+      showToast("¡Meta guardada con éxito!", "💖");
+      confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
+    }
+
+    function saveSale() {
+      const amountInput = document.getElementById('saleAmount');
+      const dateInput = document.getElementById('saleDate');
+      const noteInput = document.getElementById('saleNote');
+
+      const amount = parseFloat(amountInput.value);
+      const date = dateInput.value;
+      const note = noteInput.value.trim() || 'Venta del turno';
+
+      if (!amount || amount <= 0) {
+        showToast("Ingresa el monto vendido", "💸");
+        return;
+      }
+      if (!date) {
+        showToast("Ingresa la fecha", "📅");
+        return;
+      }
+
+      appData.sales.unshift({
+        id: Date.now(),
+        amount,
+        date,
+        note
+      });
+
+      saveData();
+      amountInput.value = '';
+      noteInput.value = '';
+      closeSheet('saleSheet');
+      updateDashboard();
+
+      showToast("¡Venta restada de tu saldo!", "✨");
+      confetti({
+        particleCount: 70,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#ff6584', '#c3a6ff', '#9ae5cc']
+      });
+    }
+
+    function deleteSale(id) {
+      appData.sales = appData.sales.filter(s => s.id !== id);
+      saveData();
+      updateDashboard();
+      showToast("Venta eliminada", "🗑️");
+    }
+
+    // --- CÁLCULOS Y RENDERIZADO DEL DASHBOARD ---
+    function updateDashboard() {
+      const totalSales = appData.sales.reduce((sum, item) => sum + item.amount, 0);
+      const target = appData.targetAmount || 0;
+      const pending = Math.max(0, target - totalSales);
+
+      // Días restantes incluyendo el día de hoy
+      let daysRemaining = 0;
+      if (appData.targetDate) {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const targetD = new Date(appData.targetDate + 'T00:00:00');
+        const diffTime = targetD - today;
+        daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      }
+
+      // Venta Diaria Requerida en Pesos y en %
+      let dailyNeeded = 0;
+      let dailyPercent = 0;
+
+      if (target > 0) {
+        if (daysRemaining > 0 && pending > 0) {
+          dailyNeeded = Math.ceil(pending / daysRemaining);
+          dailyPercent = ((dailyNeeded / target) * 100).toFixed(1);
+        } else if (pending <= 0) {
+          dailyNeeded = 0;
+          dailyPercent = 0;
+        }
+      }
+
+      const progressPercent = target > 0 ? Math.min(100, ((totalSales / target) * 100)).toFixed(1) : 0;
+
+      // Actualizar DOM
+      document.getElementById('dailyRequiredAmount').innerText = formatMoney(dailyNeeded);
+      document.getElementById('dailyRequiredPercent').innerText = `${dailyPercent}% de tu meta al día`;
+      document.getElementById('pendingAmount').innerText = formatMoney(pending);
+      document.getElementById('daysRemaining').innerText = daysRemaining > 0 ? `${daysRemaining} días rest.` : (appData.targetDate ? 'Plazo vencido' : 'Sin fecha');
+      document.getElementById('totalSoldAmount').innerText = formatMoney(totalSales);
+      document.getElementById('progressPercent').innerText = `${progressPercent}% logrado`;
+      document.getElementById('progressBarFill').style.width = `${progressPercent}%`;
+
+      // Recordatorio inteligente del día
+      const todayISO = new Date().toISOString().split('T')[0];
+      const hasLoggedToday = appData.sales.some(s => s.date === todayISO);
+      const reminder = document.getElementById('reminderMessage');
+
+      if (hasLoggedToday) {
+        reminder.innerHTML = `✨ <strong>¡Excelente!</strong> Ya registraste ventas para hoy.`;
+      } else {
+        reminder.innerHTML = `🌸 <strong>Pendiente:</strong> No olvides anotar tu turno al terminar.`;
+      }
+
+      renderHistory();
+      renderCharts(totalSales, pending);
+    }
+
+    // --- RENDERIZAR HISTORIAL ---
+    function renderHistory() {
+      const container = document.getElementById('salesHistoryList');
+      if (appData.sales.length === 0) {
+        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 20px;">Aún no hay ventas registradas. 💌</p>`;
+        return;
+      }
+
+      container.innerHTML = appData.sales.map(s => `
+        <div class="history-row">
+          <div class="history-meta">
+            <div class="note">${escapeHtml(s.note)}</div>
+            <div class="date">${s.date}</div>
+          </div>
+          <div class="history-actions">
+            <span class="history-amount">+ ${formatMoney(s.amount)}</span>
+            <button class="btn-del-touch" aria-label="Eliminar venta" onclick="deleteSale(${s.id})">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // --- CAMBIO DE VISTAS / PESTAÑAS (CONTROL SEGMENTADO) ---
+    function switchView(tab) {
+      currentTab = tab;
+      const vProg = document.getElementById('viewProg');
+      const vRitmo = document.getElementById('viewRitmo');
+      const vHist = document.getElementById('viewHist');
+
+      const bProg = document.getElementById('tabBtnProg');
+      const bRitmo = document.getElementById('tabBtnRitmo');
+      const bHist = document.getElementById('tabBtnHist');
+
+      [vProg, vRitmo, vHist].forEach(el => el.style.display = 'none');
+      [bProg, bRitmo, bHist].forEach(el => el.classList.remove('active'));
+
+      if (tab === 'prog') {
+        vProg.style.display = 'block';
+        bProg.classList.add('active');
+        if (progressChartInstance) progressChartInstance.resize();
+      } else if (tab === 'ritmo') {
+        vRitmo.style.display = 'block';
+        bRitmo.classList.add('active');
+        if (ritmoChartInstance) ritmoChartInstance.resize();
+      } else {
+        vHist.style.display = 'block';
+        bHist.classList.add('active');
+      }
+    }
+
+    // --- GRÁFICOS OPTIMIZADOS PARA MÓVIL ---
+    function renderCharts(totalSales, pending) {
+      // 1. Dona de progreso
+      const pCtx = document.getElementById('progressChart').getContext('2d');
+      const pData = (totalSales === 0 && pending === 0) ? [0, 1] : [totalSales, pending];
+
+      if (progressChartInstance) {
+        progressChartInstance.data.datasets[0].data = pData;
+        progressChartInstance.update();
+      } else {
+        progressChartInstance = new Chart(pCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Vendido', 'Pendiente'],
+            datasets: [{
+              data: pData,
+              backgroundColor: ['#ff6584', '#eedcf5'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { boxWidth: 12, font: { family: 'Quicksand', size: 11, weight: '700' }, color: '#4f2d4d' }
+              }
+            },
+            cutout: '72%'
+          }
+        });
+      }
+
+      // 2. Ritmo de ventas (Últimos 5 días)
+      const rCtx = document.getElementById('ritmoChart').getContext('2d');
+      const salesByDate = {};
+      [...appData.sales].reverse().forEach(s => {
+        salesByDate[s.date] = (salesByDate[s.date] || 0) + s.amount;
+      });
+
+      const labels = Object.keys(salesByDate).slice(-5);
+      const values = labels.map(l => salesByDate[l]);
+
+      if (ritmoChartInstance) {
+        ritmoChartInstance.data.labels = labels;
+        ritmoChartInstance.data.datasets[0].data = values;
+        ritmoChartInstance.update();
+      } else {
+        ritmoChartInstance = new Chart(rCtx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Ventas',
+              data: values,
+              backgroundColor: '#9ae5cc',
+              borderColor: '#7ed4b8',
+              borderWidth: 1.5,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { font: { family: 'Quicksand', size: 10 }, callback: v => '$' + v.toLocaleString() },
+                grid: { color: 'rgba(255, 204, 215, 0.3)' }
+              },
+              x: {
+                ticks: { font: { family: 'Quicksand', size: 10 } },
+                grid: { display: false }
+              }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>
